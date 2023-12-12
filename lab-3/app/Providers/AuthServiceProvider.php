@@ -4,6 +4,8 @@ namespace App\Providers;
 
 // use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Gate;
+use App\Models\User;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -21,6 +23,21 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Gate::define('create-accounting', function (User $user) {
+            return true;
+        });
+        Gate::define('show-accounting', function (User $user) {
+            return true;
+        });
+
+        Gate::define('edit-accounting', function (User $user, $accounting) {
+            if($user->role === "editor"||$user->role === "superadmin") return true;
+            return $user->id === $accounting->creator_user_id;
+        });
+
+        Gate::define('delete-accounting', function (User $user, $tournament) {
+            if($user->role === "superadmin") return true;
+            return $user->id === $tournament->creator_user_id;
+        });
     }
 }

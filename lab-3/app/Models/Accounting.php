@@ -9,5 +9,5 @@ class Accounting extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['fullName','position','salary','childrenQuantity','experience'];
+    protected $fillable = ['fullName', 'position', 'salary', 'childrenQuantity', 'experience', 'creator_user_id'];
 }
