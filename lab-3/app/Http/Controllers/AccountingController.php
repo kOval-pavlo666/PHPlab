@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Accounting;
+use App\Models\User;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Auth;
 
 
 class AccountingController extends Controller
@@ -29,26 +32,41 @@ class AccountingController extends Controller
     }
     public function create()
     {
+        $user = Auth::user();
         $this->debug_to_console("Create");
-        return view('accountings.create');
+        if(Gate::forUser($user)->allows('create-accounting')){
+            return view('accountings.create');
+        }else{
+            abort(403);
+        }
     }
     public function store(Request $request)
     {
-        Accounting::create($request->all());
+        $user = Auth::user();
+        Accounting::create(array_merge($request->all(), ['creator_user_id' => $user->id]));
         return redirect('/accountings')->with('success', 'Accounting created successfully!');
     }
     public function show($id)
     {
         $this->debug_to_console("Show");
-        $accounting = Accounting::findOrFail($id);
-        return view('accountings.show', ['accounting' => $accounting]);
+        $user = Auth::user();
+        if(Gate::forUser($user)->allows('show-accounting')){
+            $accounting = Accounting::findOrFail($id);
+            return view('accountings.show', ['accounting' => $accounting]);
+        }else{
+            abort(403);
+        }
     }
     public function edit($id)
     {
+        $user = Auth::user();
         $this->debug_to_console("Edit");
         $accounting = Accounting::findOrFail($id);
-        return view('accountings.edit', ['accounting' => $accounting]);
-        //
+        if(Gate::forUser($user)->allows('edit-accounting',$accounting)){
+            return view('accountings.edit', ['accounting' => $accounting]);
+        }else{
+            abort(403);
+        }
     }
     public function update(Request $request, $id)
     {
@@ -58,9 +76,14 @@ class AccountingController extends Controller
     }
     public function destroy($id)
     {
+        $user = Auth::user();
         $accounting = Accounting::findOrFail($id);
-        $accounting->delete();
-        return redirect('/accountings')->with('success', 'Accounting deleted successfully!');
+        if(Gate::forUser($user)->allows('delete-accounting',$accounting)){
+            $accounting->delete();
+            return redirect('/accountings')->with('success', 'Accounting deleted successfully!');
+        }else{
+            abort(403);
+        }
     }
 
 }
